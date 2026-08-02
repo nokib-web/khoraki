@@ -8,6 +8,9 @@ import '../../features/bazar/presentation/screens/bazar_list_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/meals/presentation/screens/meals_screen.dart';
 import '../../features/notices/presentation/screens/notices_list_screen.dart';
+import '../../features/settlement/domain/entities/settlement_entity.dart';
+import '../../features/settlement/presentation/screens/settlement_detail_screen.dart';
+import '../../features/settlement/presentation/screens/settlements_list_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/phone',
@@ -49,6 +52,17 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/notices',
       builder: (BuildContext context, GoRouterState state) => const NoticesListScreen(),
+    ),
+    GoRoute(
+      path: '/settlements',
+      builder: (BuildContext context, GoRouterState state) => const SettlementsListScreen(),
+    ),
+    GoRoute(
+      path: '/settlement-detail',
+      builder: (BuildContext context, GoRouterState state) {
+        final settlement = state.extra as SettlementEntity;
+        return SettlementDetailScreen(settlement: settlement);
+      },
     ),
   ],
 );
