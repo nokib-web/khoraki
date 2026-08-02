@@ -8,6 +8,8 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../bazar/presentation/screens/bazar_list_screen.dart';
 import '../../../meals/presentation/providers/meal_providers.dart';
 import '../../../meals/presentation/screens/meals_screen.dart';
+import '../../../notices/presentation/providers/notice_providers.dart';
+import '../../../notices/presentation/screens/notices_list_screen.dart';
 import '../providers/dashboard_providers.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -18,7 +20,7 @@ class DashboardScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
-  int _currentIndex = 2; // Default to Dashboard Overview tab
+  int _currentIndex = 3; // Default to Dashboard Overview tab
 
   @override
   Widget build(BuildContext context) {
@@ -26,9 +28,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final role = ref.watch(currentUserRoleProvider);
     final messId = ref.watch(currentMessIdProvider);
 
+    final unreadNoticeCount = ref.watch(unreadNoticeCountProvider);
+
     final screens = [
       const MealsScreen(),
       const BazarListScreen(),
+      const NoticesListScreen(),
       _buildDashboardHomeTab(user, role, messId),
     ];
 
@@ -42,16 +47,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         onTap: (index) => setState(() => _currentIndex = index),
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textSecondary,
-        items: const [
-          BottomNavigationBarItem(
+        type: BottomNavigationBarType.fixed,
+        items: [
+          const BottomNavigationBarItem(
             icon: Icon(Icons.restaurant_menu),
             label: 'Meals',
           ),
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart),
             label: 'Bazar',
           ),
           BottomNavigationBarItem(
+            icon: Badge(
+              isLabelVisible: unreadNoticeCount > 0,
+              label: Text('$unreadNoticeCount'),
+              backgroundColor: AppColors.error,
+              child: const Icon(Icons.campaign),
+            ),
+            label: 'Notices',
+          ),
+          const BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
             label: 'Dashboard',
           ),
@@ -193,7 +208,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 2 & 3. Month Total Bazar Cost & Meal Rate Cards
+                        // Month Total Bazar Cost & Meal Rate Cards
                         Row(
                           children: [
                             Expanded(
@@ -219,7 +234,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ),
                         const SizedBox(height: 20),
 
-                        // 4. "Your Balance" Card
+                        // "Your Balance" Card
                         Card(
                           elevation: 3,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -306,7 +321,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ),
                         const SizedBox(height: 24),
 
-                        // 5. Manager Summary Table
+                        // Manager Summary Table
                         if (isManager) ...[
                           const Row(
                             children: [

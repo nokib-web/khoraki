@@ -7,6 +7,7 @@ import '../../features/bazar/presentation/screens/add_bazar_entry_screen.dart';
 import '../../features/bazar/presentation/screens/bazar_list_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/meals/presentation/screens/meals_screen.dart';
+import '../../features/notices/presentation/screens/notices_list_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/phone',
@@ -44,6 +45,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/add-bazar',
       builder: (BuildContext context, GoRouterState state) => const AddBazarEntryScreen(),
+    ),
+    GoRoute(
+      path: '/notices',
+      builder: (BuildContext context, GoRouterState state) => const NoticesListScreen(),
     ),
   ],
 );

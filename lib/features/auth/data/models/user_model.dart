@@ -8,6 +8,7 @@ class UserModel extends UserEntity {
     super.messId,
     super.role = 'none',
     super.createdAt,
+    super.lastSeenNoticeTimestamp,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -20,6 +21,9 @@ class UserModel extends UserEntity {
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'].toString())
           : null,
+      lastSeenNoticeTimestamp: json['lastSeenNoticeTimestamp'] != null
+          ? DateTime.tryParse(json['lastSeenNoticeTimestamp'].toString())
+          : null,
     );
   }
 
@@ -31,6 +35,7 @@ class UserModel extends UserEntity {
       'messId': messId,
       'role': role,
       'createdAt': createdAt?.toIso8601String(),
+      'lastSeenNoticeTimestamp': lastSeenNoticeTimestamp?.toIso8601String(),
     };
   }
 }
