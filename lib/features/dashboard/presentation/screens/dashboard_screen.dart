@@ -389,6 +389,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   loading: () => const LoadingIndicator(message: 'Calculating monthly stats...'),
                   error: (err, stack) => Text('Error calculating stats: $err'),
                 ),
+                const SizedBox(height: 24),
+                Card(
+                  elevation: 1,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  child: ListTile(
+                    leading: const Icon(Icons.privacy_tip, color: AppColors.primary),
+                    title: const Text('Privacy Policy'),
+                    subtitle: const Text('Read in-app privacy policy & data protection terms'),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
+                      context.push('/privacy-policy');
+                    },
+                  ),
+                ),
                 const SizedBox(height: 32),
               ],
             ),

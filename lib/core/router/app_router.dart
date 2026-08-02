@@ -8,6 +8,7 @@ import '../../features/bazar/presentation/screens/bazar_list_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/meals/presentation/screens/meals_screen.dart';
 import '../../features/notices/presentation/screens/notices_list_screen.dart';
+import '../../features/privacy_policy/presentation/screens/privacy_policy_screen.dart';
 import '../../features/settlement/domain/entities/settlement_entity.dart';
 import '../../features/settlement/presentation/screens/settlement_detail_screen.dart';
 import '../../features/settlement/presentation/screens/settlements_list_screen.dart';
@@ -63,6 +64,10 @@ final GoRouter appRouter = GoRouter(
         final settlement = state.extra as SettlementEntity;
         return SettlementDetailScreen(settlement: settlement);
       },
+    ),
+    GoRoute(
+      path: '/privacy-policy',
+      builder: (BuildContext context, GoRouterState state) => const PrivacyPolicyScreen(),
     ),
   ],
 );
