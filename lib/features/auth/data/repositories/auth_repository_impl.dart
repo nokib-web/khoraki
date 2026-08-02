@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import '../../../../core/constants/firestore_paths.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/firestore_service.dart';
@@ -7,7 +8,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../models/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  final FirebaseAuth _firebaseAuth;
+  final FirebaseAuth? _customAuth;
   final FirestoreService _firestoreService;
   final AuthService _authService;
 
@@ -15,9 +16,17 @@ class AuthRepositoryImpl implements AuthRepository {
     FirebaseAuth? firebaseAuth,
     FirestoreService? firestoreService,
     AuthService? authService,
-  })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+  })  : _customAuth = firebaseAuth,
         _firestoreService = firestoreService ?? FirestoreService(),
         _authService = authService ?? AuthService();
+
+  FirebaseAuth get _firebaseAuth {
+    if (_customAuth != null) return _customAuth!;
+    if (Firebase.apps.isNotEmpty) {
+      return FirebaseAuth.instance;
+    }
+    throw Exception('Firebase is not initialized yet.');
+  }
 
   @override
   Future<void> sendOtp({
@@ -81,6 +90,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<UserEntity?> getCurrentUserData() async {
     try {
+      if (Firebase.apps.isEmpty) return null;
       final user = _authService.currentUser;
       if (user == null) return null;
 
