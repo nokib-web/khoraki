@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../bazar/presentation/screens/bazar_list_screen.dart';
 import '../../../meals/presentation/screens/meals_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -22,6 +23,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     final screens = [
       const MealsScreen(),
+      const BazarListScreen(),
       _buildHomeOverviewTab(user, role, messId),
     ];
 
@@ -39,6 +41,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.restaurant_menu),
             label: 'Meals',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart),
+            label: 'Bazar',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),

@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/screens/create_or_join_mess_screen.dart';
 import '../../features/auth/presentation/screens/otp_verify_screen.dart';
 import '../../features/auth/presentation/screens/phone_input_screen.dart';
+import '../../features/bazar/presentation/screens/add_bazar_entry_screen.dart';
+import '../../features/bazar/presentation/screens/bazar_list_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/meals/presentation/screens/meals_screen.dart';
 
@@ -34,6 +36,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/meals',
       builder: (BuildContext context, GoRouterState state) => const MealsScreen(),
+    ),
+    GoRoute(
+      path: '/bazar',
+      builder: (BuildContext context, GoRouterState state) => const BazarListScreen(),
+    ),
+    GoRoute(
+      path: '/add-bazar',
+      builder: (BuildContext context, GoRouterState state) => const AddBazarEntryScreen(),
     ),
   ],
 );

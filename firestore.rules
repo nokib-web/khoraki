@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // User profile rule
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Household / Mess rule
+    match /households/{messId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager';
+
+      // Meals subcollection rule
+      match /meals/{mealId} {
+        allow read, write: if request.auth != null;
+      }
+
+      // Bazars subcollection rule (Manager-only write, member read-only)
+      match /bazars/{bazarId} {
+        allow read: if request.auth != null;
+        allow create, update, delete: if request.auth != null &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager';
+      }
+    }
+  }
+}
