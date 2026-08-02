@@ -80,18 +80,22 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<UserEntity?> getCurrentUserData() async {
-    final user = _authService.currentUser;
-    if (user == null) return null;
+    try {
+      final user = _authService.currentUser;
+      if (user == null) return null;
 
-    final docSnapshot = await _firestoreService.getDocument(FirestorePaths.user(user.uid));
-    if (docSnapshot.exists && docSnapshot.data() != null) {
-      return UserModel.fromJson(docSnapshot.data()!);
+      final docSnapshot = await _firestoreService.getDocument(FirestorePaths.user(user.uid));
+      if (docSnapshot.exists && docSnapshot.data() != null) {
+        return UserModel.fromJson(docSnapshot.data()!);
+      }
+      return UserModel(
+        uid: user.uid,
+        phoneNumber: user.phoneNumber ?? '',
+        role: 'none',
+      );
+    } catch (e) {
+      return null;
     }
-    return UserModel(
-      uid: user.uid,
-      phoneNumber: user.phoneNumber ?? '',
-      role: 'none',
-    );
   }
 
   @override
