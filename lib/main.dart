@@ -4,19 +4,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await Firebase.initializeApp();
-  } catch (e) {
-    debugPrint('Firebase initialization warning: $e');
-  }
 
   runApp(
     const ProviderScope(
       child: KhorakiApp(),
     ),
   );
+
+  _initFirebase();
+}
+
+Future<void> _initFirebase() async {
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase initialization warning: $e');
+  }
 }
 
 class KhorakiApp extends StatelessWidget {
