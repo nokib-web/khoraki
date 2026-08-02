@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../../../../core/services/firestore_service.dart';
 import '../../domain/entities/bazar_entry_entity.dart';
@@ -64,10 +63,10 @@ class BazarRepositoryImpl implements BazarRepository {
       }
     }
 
-    final docRef = FirebaseFirestore.instance.collection(_collectionPath(messId)).doc();
+    final docId = DateTime.now().millisecondsSinceEpoch.toString();
 
     final model = BazarEntryModel(
-      id: docRef.id,
+      id: docId,
       messId: messId,
       createdByUserId: userId,
       createdByUserName: userName,
@@ -79,7 +78,7 @@ class BazarRepositoryImpl implements BazarRepository {
     );
 
     await _firestoreService.setData(
-      path: '${_collectionPath(messId)}/${docRef.id}',
+      path: '${_collectionPath(messId)}/$docId',
       data: model.toJson(),
     );
   }

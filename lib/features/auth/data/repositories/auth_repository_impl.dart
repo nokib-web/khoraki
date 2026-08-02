@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/firestore_paths.dart';
 import '../../../../core/services/auth_service.dart';
@@ -29,9 +28,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _firebaseAuth.verifyPhoneNumber(
         phoneNumber: phoneNumber,
-        verificationCompleted: (PhoneAuthCredential credential) async {
-          // Auto-verification handled if supported
-        },
+        verificationCompleted: (PhoneAuthCredential credential) async {},
         verificationFailed: (FirebaseAuthException e) {
           onError(e.message ?? 'Verification failed');
         },
@@ -67,7 +64,6 @@ class AuthRepositoryImpl implements AuthRepository {
     if (docSnapshot.exists && docSnapshot.data() != null) {
       return UserModel.fromJson(docSnapshot.data()!);
     } else {
-      // Create new user profile document
       final newUser = UserModel(
         uid: user.uid,
         phoneNumber: user.phoneNumber ?? '',
@@ -106,11 +102,11 @@ class AuthRepositoryImpl implements AuthRepository {
     final currentUser = _authService.currentUser;
     if (currentUser == null) throw Exception('User not logged in');
 
-    final messRef = FirebaseFirestore.instance.collection(FirestorePaths.households).doc();
-    final inviteCode = messRef.id.substring(0, 6).toUpperCase();
+    final messId = DateTime.now().millisecondsSinceEpoch.toString();
+    final inviteCode = messId.substring(messId.length - 6).toUpperCase();
 
     final messData = {
-      'id': messRef.id,
+      'id': messId,
       'name': messName,
       'managerId': currentUser.uid,
       'inviteCode': inviteCode,
@@ -118,7 +114,7 @@ class AuthRepositoryImpl implements AuthRepository {
     };
 
     await _firestoreService.setData(
-      path: FirestorePaths.household(messRef.id),
+      path: FirestorePaths.household(messId),
       data: messData,
     );
 
@@ -126,7 +122,7 @@ class AuthRepositoryImpl implements AuthRepository {
       uid: currentUser.uid,
       phoneNumber: currentUser.phoneNumber ?? '',
       displayName: managerName,
-      messId: messRef.id,
+      messId: messId,
       role: 'manager',
       createdAt: DateTime.now(),
     );
@@ -147,17 +143,20 @@ class AuthRepositoryImpl implements AuthRepository {
     final currentUser = _authService.currentUser;
     if (currentUser == null) throw Exception('User not logged in');
 
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection(FirestorePaths.households)
-        .where('inviteCode', isEqualTo: inviteCode.trim().toUpperCase())
-        .limit(1)
-        .get();
+    final stream = _firestoreService.collectionStream(
+      path: FirestorePaths.households,
+      queryBuilder: (query) => query
+          .where('inviteCode', isEqualTo: inviteCode.trim().toUpperCase())
+          .limit(1),
+    );
 
-    if (querySnapshot.docs.isEmpty) {
+    final snapshot = await stream.first;
+
+    if (snapshot.docs.isEmpty) {
       throw Exception('Invalid invite code. Mess not found.');
     }
 
-    final messDoc = querySnapshot.docs.first;
+    final messDoc = snapshot.docs.first;
     final messId = messDoc.id;
 
     final updatedUser = UserModel(

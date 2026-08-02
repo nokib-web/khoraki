@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/constants/firestore_paths.dart';
 import '../../../../core/services/firestore_service.dart';
 import '../../domain/entities/notice_entity.dart';
@@ -33,10 +32,10 @@ class NoticeRepositoryImpl implements NoticeRepository {
     required String title,
     required String content,
   }) async {
-    final docRef = FirebaseFirestore.instance.collection(_collectionPath(messId)).doc();
+    final docId = DateTime.now().millisecondsSinceEpoch.toString();
 
     final model = NoticeModel(
-      id: docRef.id,
+      id: docId,
       messId: messId,
       authorId: authorId,
       authorName: authorName,
@@ -46,7 +45,7 @@ class NoticeRepositoryImpl implements NoticeRepository {
     );
 
     await _firestoreService.setData(
-      path: '${_collectionPath(messId)}/${docRef.id}',
+      path: '${_collectionPath(messId)}/$docId',
       data: model.toJson(),
     );
   }

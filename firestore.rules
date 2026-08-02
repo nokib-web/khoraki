@@ -1,42 +1,72 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // User profile rule
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
     }
-    
-    // Household / Mess rule
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isManager() {
+      return isAuthenticated() && getUserData().role == 'manager';
+    }
+
+    function isMessMember(messId) {
+      return isAuthenticated() && (
+        getUserData().messId == messId ||
+        exists(/databases/$(database)/documents/households/$(messId)/members/$(request.auth.uid))
+      );
+    }
+
+    // 1. Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      // Members can update non-sensitive fields only (role & depositTotal restricted to manager)
+      allow update: if isAuthenticated() && (
+        isManager() || (
+          request.auth.uid == userId &&
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'depositTotal'])
+        )
+      );
+    }
+
+    // 2. Household / Mess collection
     match /households/{messId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager';
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isManager();
 
-      // Meals subcollection rule
-      match /meals/{mealId} {
-        allow read, write: if request.auth != null;
+      // Meals subcollection: members can write their own meal document
+      match /meals/{mealDocId} {
+        allow read: if isAuthenticated();
+        allow create, update: if isAuthenticated() && (
+          isManager() ||
+          request.resource.data.userId == request.auth.uid
+        );
+        allow delete: if isManager();
       }
 
-      // Bazars subcollection rule (Manager-only write, member read-only)
+      // Bazars subcollection: Manager-only write, member read-only
       match /bazars/{bazarId} {
-        allow read: if request.auth != null;
-        allow create, update, delete: if request.auth != null &&
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager';
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isManager();
       }
 
-      // Notices subcollection rule (Manager-only write, member read-only)
+      // Notices subcollection: Manager-only write, member read-only
       match /notices/{noticeId} {
-        allow read: if request.auth != null;
-        allow create, update, delete: if request.auth != null &&
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager';
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isManager();
       }
 
-      // Settlements subcollection rule (Manager-only write, member read-only)
+      // Settlements subcollection: Manager-only write, member read-only
       match /settlements/{settlementId} {
-        allow read: if request.auth != null;
-        allow create, update, delete: if request.auth != null &&
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'manager';
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isManager();
       }
     }
   }
