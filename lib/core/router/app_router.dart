@@ -4,6 +4,7 @@ import '../../features/auth/presentation/screens/create_or_join_mess_screen.dart
 import '../../features/auth/presentation/screens/otp_verify_screen.dart';
 import '../../features/auth/presentation/screens/phone_input_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
+import '../../features/meals/presentation/screens/meals_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/phone',
@@ -29,6 +30,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/dashboard',
       builder: (BuildContext context, GoRouterState state) => const DashboardScreen(),
+    ),
+    GoRoute(
+      path: '/meals',
+      builder: (BuildContext context, GoRouterState state) => const MealsScreen(),
     ),
   ],
 );

@@ -1,21 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/widgets/primary_button.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
+import '../../../meals/presentation/screens/meals_screen.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  int _currentIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
-    final messId = ref.watch(currentMessIdProvider);
     final role = ref.watch(currentUserRoleProvider);
+    final messId = ref.watch(currentMessIdProvider);
+
+    final screens = [
+      const MealsScreen(),
+      _buildHomeOverviewTab(user, role, messId),
+    ];
 
     return Scaffold(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: screens,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textSecondary,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.restaurant_menu),
+            label: 'Meals',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Overview',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHomeOverviewTab(dynamic user, String? role, String? messId) {
+    return Scaffold(
       appBar: AppBar(
-        title: const Text('Khoraki Dashboard'),
+        title: const Text('Mess Overview'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -74,23 +111,6 @@ class DashboardScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 32),
-              const Center(
-                child: Text(
-                  'Welcome to Khoraki Dashboard',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              PrimaryButton(
-                label: 'Sign Out',
-                onPressed: () {
-                  ref.read(authNotifierProvider.notifier).signOut();
-                },
               ),
             ],
           ),
