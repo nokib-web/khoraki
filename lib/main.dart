@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_colors.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -65,20 +66,11 @@ void main() async {
 Future<void> _initFirebase() async {
   if (Firebase.apps.isNotEmpty) return;
   try {
-    await Firebase.initializeApp();
-  } catch (_) {
-    try {
-      await Firebase.initializeApp(
-        options: const FirebaseOptions(
-          apiKey: 'AIzaSyDummyKeyForTestingKhorakiApp12345',
-          appId: '1:123456789012:android:abcdef1234567890',
-          messagingSenderId: '123456789012',
-          projectId: 'khoraki-app',
-        ),
-      );
-    } catch (e) {
-      debugPrint('Firebase init fallback warning: $e');
-    }
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    debugPrint('Firebase initialization warning: $e');
   }
 }
 

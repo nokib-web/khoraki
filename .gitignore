@@ -33,4 +33,7 @@ GoogleService-Info.plist
 .idea/
 *.iml
 *.iws
-.vscode/
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
+.gitignore
