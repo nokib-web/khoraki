@@ -1,0 +1,184 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../core/constants/firestore_paths.dart';
+import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/firestore_service.dart';
+import '../../domain/entities/user_entity.dart';
+import '../../domain/repositories/auth_repository.dart';
+import '../models/user_model.dart';
+
+class AuthRepositoryImpl implements AuthRepository {
+  final FirebaseAuth _firebaseAuth;
+  final FirestoreService _firestoreService;
+  final AuthService _authService;
+
+  AuthRepositoryImpl({
+    FirebaseAuth? firebaseAuth,
+    FirestoreService? firestoreService,
+    AuthService? authService,
+  })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+        _firestoreService = firestoreService ?? FirestoreService(),
+        _authService = authService ?? AuthService();
+
+  @override
+  Future<void> sendOtp({
+    required String phoneNumber,
+    required Function(String verificationId) onCodeSent,
+    required Function(String error) onError,
+  }) async {
+    try {
+      await _firebaseAuth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          // Auto-verification handled if supported
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          onError(e.message ?? 'Verification failed');
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          onCodeSent(verificationId);
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {},
+      );
+    } catch (e) {
+      onError(e.toString());
+    }
+  }
+
+  @override
+  Future<UserEntity> verifyOtp({
+    required String verificationId,
+    required String smsCode,
+  }) async {
+    final credential = PhoneAuthProvider.credential(
+      verificationId: verificationId,
+      smsCode: smsCode,
+    );
+
+    final userCredential = await _firebaseAuth.signInWithCredential(credential);
+    final user = userCredential.user;
+    if (user == null) {
+      throw Exception('User authentication failed.');
+    }
+
+    final userDocPath = FirestorePaths.user(user.uid);
+    final docSnapshot = await _firestoreService.getDocument(userDocPath);
+
+    if (docSnapshot.exists && docSnapshot.data() != null) {
+      return UserModel.fromJson(docSnapshot.data()!);
+    } else {
+      // Create new user profile document
+      final newUser = UserModel(
+        uid: user.uid,
+        phoneNumber: user.phoneNumber ?? '',
+        role: 'none',
+        createdAt: DateTime.now(),
+      );
+      await _firestoreService.setData(
+        path: userDocPath,
+        data: newUser.toJson(),
+      );
+      return newUser;
+    }
+  }
+
+  @override
+  Future<UserEntity?> getCurrentUserData() async {
+    final user = _authService.currentUser;
+    if (user == null) return null;
+
+    final docSnapshot = await _firestoreService.getDocument(FirestorePaths.user(user.uid));
+    if (docSnapshot.exists && docSnapshot.data() != null) {
+      return UserModel.fromJson(docSnapshot.data()!);
+    }
+    return UserModel(
+      uid: user.uid,
+      phoneNumber: user.phoneNumber ?? '',
+      role: 'none',
+    );
+  }
+
+  @override
+  Future<UserEntity> createMess({
+    required String messName,
+    required String managerName,
+  }) async {
+    final currentUser = _authService.currentUser;
+    if (currentUser == null) throw Exception('User not logged in');
+
+    final messRef = FirebaseFirestore.instance.collection(FirestorePaths.households).doc();
+    final inviteCode = messRef.id.substring(0, 6).toUpperCase();
+
+    final messData = {
+      'id': messRef.id,
+      'name': messName,
+      'managerId': currentUser.uid,
+      'inviteCode': inviteCode,
+      'createdAt': DateTime.now().toIso8601String(),
+    };
+
+    await _firestoreService.setData(
+      path: FirestorePaths.household(messRef.id),
+      data: messData,
+    );
+
+    final updatedUser = UserModel(
+      uid: currentUser.uid,
+      phoneNumber: currentUser.phoneNumber ?? '',
+      displayName: managerName,
+      messId: messRef.id,
+      role: 'manager',
+      createdAt: DateTime.now(),
+    );
+
+    await _firestoreService.setData(
+      path: FirestorePaths.user(currentUser.uid),
+      data: updatedUser.toJson(),
+    );
+
+    return updatedUser;
+  }
+
+  @override
+  Future<UserEntity> joinMess({
+    required String inviteCode,
+    required String memberName,
+  }) async {
+    final currentUser = _authService.currentUser;
+    if (currentUser == null) throw Exception('User not logged in');
+
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection(FirestorePaths.households)
+        .where('inviteCode', isEqualTo: inviteCode.trim().toUpperCase())
+        .limit(1)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) {
+      throw Exception('Invalid invite code. Mess not found.');
+    }
+
+    final messDoc = querySnapshot.docs.first;
+    final messId = messDoc.id;
+
+    final updatedUser = UserModel(
+      uid: currentUser.uid,
+      phoneNumber: currentUser.phoneNumber ?? '',
+      displayName: memberName,
+      messId: messId,
+      role: 'member',
+      createdAt: DateTime.now(),
+    );
+
+    await _firestoreService.setData(
+      path: FirestorePaths.user(currentUser.uid),
+      data: updatedUser.toJson(),
+    );
+
+    return updatedUser;
+  }
+
+  @override
+  Future<void> signOut() async {
+    await _authService.signOut();
+  }
+}

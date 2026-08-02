@@ -1,13 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../main.dart';
+import '../../features/auth/presentation/screens/create_or_join_mess_screen.dart';
+import '../../features/auth/presentation/screens/otp_verify_screen.dart';
+import '../../features/auth/presentation/screens/phone_input_screen.dart';
+import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/phone',
   routes: [
     GoRoute(
-      path: '/',
-      builder: (BuildContext context, GoRouterState state) => const HomeScreen(),
+      path: '/phone',
+      builder: (BuildContext context, GoRouterState state) => const PhoneInputScreen(),
+    ),
+    GoRoute(
+      path: '/verify-otp',
+      builder: (BuildContext context, GoRouterState state) {
+        final args = state.extra as Map<String, dynamic>? ?? {};
+        return OtpVerifyScreen(
+          verificationId: args['verificationId'] as String? ?? '',
+          phoneNumber: args['phoneNumber'] as String? ?? '',
+        );
+      },
+    ),
+    GoRoute(
+      path: '/setup-mess',
+      builder: (BuildContext context, GoRouterState state) => const CreateOrJoinMessScreen(),
+    ),
+    GoRoute(
+      path: '/dashboard',
+      builder: (BuildContext context, GoRouterState state) => const DashboardScreen(),
     ),
   ],
 );
